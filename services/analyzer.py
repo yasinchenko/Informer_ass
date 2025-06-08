@@ -1,10 +1,10 @@
-
 # file: services/analyzer.py
 import re
 from collections import Counter
 import nltk
 from nltk.corpus import stopwords
 from typing import List
+from services.summarizer import summarize_text
 
 nltk.download("stopwords", quiet=True)
 
@@ -17,6 +17,6 @@ def analyze_texts(texts: List[str]) -> tuple[list[dict], str]:
     filtered = [w for w in words if w not in stop_words]
     freq = Counter(filtered).most_common(5)
     top_words = [{"word": w, "count": c} for w, c in freq]
-    summary = "— Заглушка: темы обсуждений будут здесь"
-    return top_words, summary
 
+    summary = summarize_text(all_text[:4000])
+    return top_words, summary
