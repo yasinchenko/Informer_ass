@@ -4,7 +4,7 @@ from collections import Counter
 import nltk
 from nltk.corpus import stopwords
 from typing import List
-from services.summarizer import summarize_text
+
 
 nltk.download("stopwords", quiet=True)
 
