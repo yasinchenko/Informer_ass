@@ -1,0 +1,7 @@
+# file: requirements.txt
+fastapi
+uvicorn
+requests
+nltk
+python-dotenv
+python-telegram-bot~=20.0
