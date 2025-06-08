@@ -1,21 +1,23 @@
-# file: services/analyzer.py
-import re
-from collections import Counter
-import nltk
-from nltk.corpus import stopwords
-from typing import List
+# file: services/summarizer.py
+
+from typing import Optional
 
 
-nltk.download("stopwords", quiet=True)
+def summarize_text(text: str, max_sentences: int = 3) -> str:
+    """
+    Возвращает краткое резюме текста на основе первых информативных предложений.
+    Если текст слишком короткий — возвращает его как есть.
 
-stop_words = set(stopwords.words("russian") + stopwords.words("english"))
+    :param text: исходный текст
+    :param max_sentences: максимальное число предложений в резюме
+    :return: строка с кратким описанием
+    """
+    # Простейшее разбиение по предложениям
+    sentences = text.replace("!", ".").replace("?", ".").split(".")
+    sentences = [s.strip() for s in sentences if len(s.strip()) > 20]
 
+    if not sentences:
+        return "Заглушка: темы обсуждений будут здесь"
 
-def analyze_texts(texts: List[str]) -> tuple[list[dict], str]:
-    all_text = " ".join(texts).lower()
-    words = re.findall(r"\b\w{3,}\b", all_text)
-    filtered = [w for w in words if w not in stop_words]
-    freq = Counter(filtered).most_common(5)
-    top_words = [{"word": w, "count": c} for w, c in freq]
-    summary = summarize_text(all_text)
-    return top_words, summary
+    summary = ". ".join(sentences[:max_sentences])
+    return summary + "." if not summary.endswith(".") else summary
