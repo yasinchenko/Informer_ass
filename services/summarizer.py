@@ -42,7 +42,7 @@ def _fetch_summary_from_api(text: str) -> Optional[str]:
         f"Кратко выдели пунктами темы, которые обсуждались в тексте:\n{text}"
     )
     payload = {
-        "callback_url": None,
+        
         "is_sync": True,
         "model": "deepseek-v3",
         "messages": [{"role": "user", "content": prompt}],
