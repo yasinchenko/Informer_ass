@@ -98,8 +98,11 @@ def summarize_text(text: str) -> str:
     """
 
     api_summary = _fetch_summary_from_api(text)
+    
     if api_summary:
-        return api_summary
+        if isinstance(api_summary, list):
+            return "\n".join(str(item) for item in api_summary)
+        return str(api_summary).strip()
 
     return "Саммари недоступно"
 
