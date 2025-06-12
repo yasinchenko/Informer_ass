@@ -59,25 +59,16 @@ def _fetch_summary_from_api(text: str) -> Optional[str]:
     return None
 
 
-def summarize_text(text: str, max_sentences: int = 3) -> str:
-    """
-    Возвращает краткое резюме текста на основе первых информативных предложений.
-    Если текст слишком короткий — возвращает его как есть.
+def summarize_text(text: str) -> str:
+    """Возвращает краткое резюме текста через GenAPI.
 
-    :param text: исходный текст
-    :param max_sentences: максимальное число предложений в резюме
-    :return: строка с кратким описанием
+    Если ключ API не указан или запрос завершился ошибкой,
+    возвращает уведомление о недоступности саммари.
     """
+
     api_summary = _fetch_summary_from_api(text)
     if api_summary:
         return api_summary
 
-    # Простейшее разбиение по предложениям
-    sentences = text.replace("!", ".").replace("?", ".").split(".")
-    sentences = [s.strip() for s in sentences if len(s.strip()) > 20]
+    return "Саммари недоступно"
 
-    if not sentences:
-        return "Заглушка: темы обсуждений будут здесь"
-
-    summary = ". ".join(sentences[:max_sentences])
-    return summary + "." if not summary.endswith(".") else summary
