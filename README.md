@@ -34,10 +34,12 @@ pip install -r requirements.txt
 
 Создай `.env` файл:
 ```env
-TELEGRAM_TOKEN=<токен от BotFather>
-AI_API_KEY=sk-...  # от gen-api.ru
+TELEGRAM_TOKEN=7953491746:AAEcULVXG_I1lgWdOXRqGCOdx5DMBI98hLE
+AI_API_KEY=sk-WKwVSql3WXC02No86QuiL6mhtJwZgA07Qx3qYpTMkmLGSpuB97XpFiindSG5
 DB_FILE=messages.db
 ```
+Переменная `AI_API_KEY` необязательна. Если ключ не указан или запрос к API
+завершается ошибкой, бот вернёт короткое резюме при помощи встроенной эвристики.
 
 ---
 
@@ -83,6 +85,7 @@ python bot/main.py
 fastapi
 uvicorn
 requests
+httpx
 python-telegram-bot
 python-dotenv
 nltk
@@ -93,6 +96,7 @@ nltk
 ## 📌 Примечания
 
 - Используется API https://api.gen-api.ru
+- Для обращения к API нужен ключ `AI_API_KEY`
 - Поддерживается только текст в групповых чатах
 - Период анализа ограничен 7 днями, 4000 токенов
 
