@@ -57,7 +57,7 @@ def _fetch_summary_from_api(text: str) -> Optional[Union[str, list]]:
     try:
         logging.debug(f"PAYLOAD SENT: {payload}")
         response = httpx.post(
-            GEN_API_URL, json=payload, headers=headers, timeout=20
+            GEN_API_URL, json=payload, headers=headers, timeout=60
         )
         response.raise_for_status()
         data = response.json()
@@ -69,9 +69,9 @@ def _fetch_summary_from_api(text: str) -> Optional[Union[str, list]]:
             request_id = data.get("request_id")
             if request_id:
                 poll_url = f"https://api.gen-api.ru/api/v1/request/get/{request_id}"
-                for _ in range(5):
+                for _ in range(10):
                     try:
-                        resp = httpx.get(poll_url, headers=headers, timeout=20)
+                        resp = httpx.get(poll_url, headers=headers, timeout=60)
                         resp.raise_for_status()
                         result = resp.json()
                         if result.get("status") == "success":
