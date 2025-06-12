@@ -17,7 +17,7 @@ def _fetch_summary_from_api(text: str) -> Optional[str]:
     if not api_key:
         return None
 
-    prompt = f"Кратко подытожь следующий текст:\n{text}"
+    prompt = f"Кратко выдели пунктами темы, которые обсуждались в тексте:\n{text}"
     payload = {"callback_url": None, "messages": [{"role": "user", "content": prompt}]}
 
     headers = {
