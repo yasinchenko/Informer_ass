@@ -3,7 +3,8 @@
 import os
 import logging
 import time
-from typing import Optional
+import ast
+from typing import Optional, Union
 
 import httpx
 
@@ -12,7 +13,7 @@ import httpx
 GEN_API_URL = "https://api.gen-api.ru/api/v1/networks/deepseek-v3"
 
 
-def _extract_summary(data: dict) -> Optional[str]:
+def _extract_summary(data: dict) -> Optional[Union[str, list]]:
     """Извлекает текст саммари из ответа API."""
     summary = (
         data.get("output")
@@ -28,21 +29,20 @@ def _extract_summary(data: dict) -> Optional[str]:
             if msg and isinstance(msg, dict):
                 summary = msg.get("content")
     if summary:
-        return str(summary).strip()
+        return summary
     return None
 
 
-def _fetch_summary_from_api(text: str) -> Optional[str]:
+def _fetch_summary_from_api(text: str) -> Optional[Union[str, list]]:
     """Возвращает саммари с https://api.gen-api.ru или ``None`` при ошибке."""
     api_key = os.getenv("AI_API_KEY")
     if not api_key:
         return None
 
     prompt = (
-        f"Кратко выдели пунктами темы, которые обсуждались в тексте:\n{text}. Ответ составь в виде списка ключевых тем общим объёмом не более 500 символов. В ответе не должно быть завершающего предложения сделать что-то ещё."
+        f"Кратко выдели пунктами темы, которые обсуждались в тексте:\n{text}"
     )
     payload = {
-        
         "is_sync": True,
         "model": "deepseek-v3",
         "messages": [{"role": "user", "content": prompt}],
@@ -55,6 +55,7 @@ def _fetch_summary_from_api(text: str) -> Optional[str]:
     }
 
     try:
+        logging.debug(f"PAYLOAD SENT: {payload}")
         response = httpx.post(
             GEN_API_URL, json=payload, headers=headers, timeout=20
         )
@@ -85,6 +86,10 @@ def _fetch_summary_from_api(text: str) -> Optional[str]:
                     time.sleep(1)
         elif isinstance(data, str):
             return data.strip()
+    except httpx.HTTPStatusError as exc:
+        logging.error("Failed to fetch summary from API: %s", exc)
+        if exc.response is not None:
+            logging.error("Response content: %s", exc.response.text)
     except Exception as exc:
         logging.error("Failed to fetch summary from API: %s", exc)
     return None
@@ -98,11 +103,16 @@ def summarize_text(text: str) -> str:
     """
 
     api_summary = _fetch_summary_from_api(text)
-    
     if api_summary:
+        if isinstance(api_summary, str) and api_summary.startswith("["):
+            try:
+                parsed = ast.literal_eval(api_summary)
+                if isinstance(parsed, list):
+                    return "\n".join(str(item).strip() for item in parsed)
+            except Exception:
+                pass
         if isinstance(api_summary, list):
-            return "\n".join(str(item) for item in api_summary)
+            return "\n".join(str(item).strip() for item in api_summary)
         return str(api_summary).strip()
 
     return "Саммари недоступно"
-
