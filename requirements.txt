@@ -2,6 +2,7 @@
 fastapi
 uvicorn
 requests
+httpx
 nltk
 python-dotenv
 python-telegram-bot~=20.0
