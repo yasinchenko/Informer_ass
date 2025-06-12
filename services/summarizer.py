@@ -17,8 +17,14 @@ def _fetch_summary_from_api(text: str) -> Optional[str]:
     if not api_key:
         return None
 
-    prompt = f"Кратко выдели пунктами темы, которые обсуждались в тексте:\n{text}"
-    payload = {"callback_url": None, "messages": [{"role": "user", "content": prompt}]}
+    prompt = (
+        f"Кратко выдели пунктами темы, которые обсуждались в тексте:\n{text}"
+    )
+    payload = {
+        "callback_url": None,
+        "is_sync": True,
+        "messages": [{"role": "user", "content": prompt}],
+    }
 
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -32,7 +38,8 @@ def _fetch_summary_from_api(text: str) -> Optional[str]:
         data = response.json()
         if isinstance(data, dict):
             summary = (
-                data.get("summary")
+                data.get("output")
+                or data.get("summary")
                 or data.get("result")
                 or data.get("text")
             )
