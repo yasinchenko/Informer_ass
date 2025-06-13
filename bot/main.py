@@ -44,11 +44,15 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Формат команды: /analyze с 01.06.2025 по 05.06.2025")
         return
 
-    date_from_dt = datetime.strptime(match.group(1), "%d.%m.%Y")
-    date_to_dt = datetime.strptime(match.group(2), "%d.%m.%Y")
+    try:
+        date_from_dt = datetime.strptime(match.group(1), "%d.%m.%Y")
+        date_to_dt = datetime.strptime(match.group(2), "%d.%m.%Y")
+    except ValueError:
+        await update.message.reply_text("Неверный формат даты. Используйте ДД.ММ.ГГГГ")
+        return
 
-    # Ограничиваем анализ одной неделей, чтобы бот сразу подсказал пользователю
-    if (date_to_dt - date_from_dt).days > 7:
+    # Ограничиваем анализ одной неделей включительно (макс 7 дней)
+    if (date_to_dt - date_from_dt).days >= 7:
         await update.message.reply_text(
             "Период анализа должен быть не более 7 дней. "
             "Укажите даты в пределах одной недели, например: "
@@ -78,23 +82,9 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
         summary = result.get("summary", "")
 
         words_block = "\n".join([f"{i+1}. {w['word']} — {w['count']}" for i, w in enumerate(top_words)])
-        reply = f"Анализ за период {match.group(1)} — {match.group(2)}\n\nТоп-5 слов:\n{words_block}\n\nТемы обсуждения:\n{summary}"
+        reply = f"Анализ за период {match.group(1)} - {match.group(2)}:\n\nТоп-5 слов:\n{words_block}\n\nТемы обсуждений:\n{summary}"
         await update.message.reply_text(reply)
 
     except Exception as e:
-        logging.error(f"Failed to fetch analysis: {e}")
+        logging.error(f"Analyze error: {e}")
         await update.message.reply_text("Ошибка при получении анализа. Попробуйте позже.")
-
-def main():
-    app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
-
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("analyze", analyze))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
-    logging.info("Бот запущен")
-    app.run_polling()
-
-
-if __name__ == "__main__":
-    main()
