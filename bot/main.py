@@ -44,8 +44,20 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Формат команды: /analyze с 01.06.2025 по 05.06.2025")
         return
 
-    date_from = datetime.strptime(match.group(1), "%d.%m.%Y").strftime("%Y-%m-%d")
-    date_to = datetime.strptime(match.group(2), "%d.%m.%Y").strftime("%Y-%m-%d")
+    date_from_dt = datetime.strptime(match.group(1), "%d.%m.%Y")
+    date_to_dt = datetime.strptime(match.group(2), "%d.%m.%Y")
+
+    # Ограничиваем анализ одной неделей, чтобы сразу подсказать, как исправить
+    if (date_to_dt - date_from_dt).days > 7:
+        await update.message.reply_text(
+            "Период анализа должен быть не более 7 дней. "
+            "Укажите даты в пределах одной недели, например: "
+            "/analyze с 01.06.2025 по 07.06.2025"
+        )
+        return
+
+    date_from = date_from_dt.strftime("%Y-%m-%d")
+    date_to = date_to_dt.strftime("%Y-%m-%d")
 
     params = {
         "chat_id": update.message.chat_id,
@@ -54,6 +66,10 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
     }
     try:
         response = requests.get(ANALYZE_API, params=params)
+        if response.status_code == 400:
+            detail = response.json().get("detail", "Некорректный запрос")
+            await update.message.reply_text(detail)
+            return
         if response.status_code != 200:
             raise Exception(response.text)
 
@@ -67,7 +83,11 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception as e:
         logging.error(f"Failed to fetch analysis: {e}")
-        await update.message.reply_text("Ошибка при получении анализа. Попробуйте позже.")
+        await update.message.reply_text(
+            "Ошибка при получении анализа. "
+            "Проверьте формат и убедитесь, что период не превышает 7 дней, "
+            "затем повторите команду."
+        )
 
 def main():
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
