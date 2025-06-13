@@ -47,11 +47,12 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
     date_from_dt = datetime.strptime(match.group(1), "%d.%m.%Y")
     date_to_dt = datetime.strptime(match.group(2), "%d.%m.%Y")
 
-    # Ограничиваем анализ одной неделей, чтобы бот сразу подсказал пользователю
+    # Ограничиваем анализ одной неделей, чтобы сразу подсказать, как исправить
     if (date_to_dt - date_from_dt).days > 7:
         await update.message.reply_text(
-            "Период анализа не должен превышать 7 дней. "
-            "Укажите даты в пределах одной недели."
+            "Период анализа должен быть не более 7 дней. "
+            "Укажите даты в пределах одной недели, например: "
+            "/analyze с 01.06.2025 по 07.06.2025"
         )
         return
 
@@ -82,7 +83,11 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception as e:
         logging.error(f"Failed to fetch analysis: {e}")
-        await update.message.reply_text("Ошибка при получении анализа. Попробуйте позже.")
+        await update.message.reply_text(
+            "Ошибка при получении анализа. "
+            "Проверьте формат и убедитесь, что период не превышает 7 дней, "
+            "затем повторите команду."
+        )
 
 def main():
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
