@@ -51,8 +51,12 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Неверный формат даты. Используйте ДД.ММ.ГГГГ")
         return
 
-    # Ограничиваем анализ одной неделей включительно (макс 7 дней)
-    if (date_to_dt - date_from_dt).days >= 7:
+    delta_days = (date_to_dt - date_from_dt).days
+    logging.info(f"Parsed dates: from {date_from_dt}, to {date_to_dt}, delta {delta_days}")
+    await update.message.reply_text(f"DEBUG: от {date_from_dt.date()} до {date_to_dt.date()} — {delta_days} дней")
+
+    if delta_days >= 7:
+        logging.warning("Диапазон превышает 7 дней. Прерывание анализа.")
         await update.message.reply_text(
             "Период анализа должен быть не более 7 дней. "
             "Укажите даты в пределах одной недели, например: "
