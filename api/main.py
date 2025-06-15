@@ -52,11 +52,14 @@ def analyze(
     try:
         date_from = datetime.strptime(from_, "%Y-%m-%d")
         date_to = datetime.strptime(to, "%Y-%m-%d")
-        if (date_to - date_from).days > 7:
-            raise HTTPException(status_code=400, detail="Период анализа не должен превышать 7 дней")
+        if (date_to - date_from).days > 30:
+            raise HTTPException(status_code=400, detail="Период анализа не должен превышать 30 дней")
 
         texts = crud.get_texts_by_chat_and_date(DB_FILE, chat_id, from_, to)
         logging.info(f"ANALYZE: chat_id={chat_id}, from={from_}, to={to}, messages={len(texts)}")
+        if not texts:
+            raise HTTPException(status_code=400, detail="В выбранном периоде не было сообщений")
+
         top_words, summary = analyze_texts(texts)
         return {"top_words": top_words, "summary": summary}
     except ValueError:
