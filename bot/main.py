@@ -18,14 +18,15 @@ logging.basicConfig(level=logging.INFO)
 
 # Обработка входящих текстовых сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.message and update.message.text:
+    message = update.effective_message
+    if message and message.text:
         data = {
-            "chat_id": update.message.chat_id,
-            "message_id": update.message.message_id,
-            "user_id": update.message.from_user.id,
-            "username": update.message.from_user.username,
-            "text": update.message.text,
-            "timestamp": update.message.date.isoformat()
+            "chat_id": message.chat_id,
+            "message_id": message.message_id,
+            "user_id": message.from_user.id,
+            "username": message.from_user.username,
+            "text": message.text,
+            "timestamp": message.date.isoformat()
         }
         try:
             requests.post(API_URL, json=data)
@@ -34,27 +35,29 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Бот активен и готов к логированию сообщений.")
+    message = update.effective_message
+    await message.reply_text("Бот активен и готов к логированию сообщений.")
 
 # Команда /analyze с <дата> по <дата>
 async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
+    message = update.effective_message
+    text = message.text
     match = re.search(r"/analyze\s+с\s+(\d{2}\.\d{2}\.\d{4})\s+по\s+(\d{2}\.\d{2}\.\d{4})", text)
     if not match:
-        await update.message.reply_text("Формат команды: /analyze с 01.06.2025 по 05.06.2025")
+        await message.reply_text("Формат команды: /analyze с 01.06.2025 по 05.06.2025")
         return
 
     try:
         date_from_dt = datetime.strptime(match.group(1), "%d.%m.%Y")
         date_to_dt = datetime.strptime(match.group(2), "%d.%m.%Y")
     except ValueError:
-        await update.message.reply_text("Неверный формат даты. Используйте ДД.ММ.ГГГГ")
+        await message.reply_text("Неверный формат даты. Используйте ДД.ММ.ГГГГ")
         return
 
     delta_days = (date_to_dt - date_from_dt).days + 1
     logging.info(f"Parsed dates: from {date_from_dt}, to {date_to_dt}, delta {delta_days}")
     if delta_days > 7:
-        await update.message.reply_text(
+        await message.reply_text(
             "Период анализа должен быть не более 7 дней. "
             "Укажите даты в пределах одной недели, например: "
             "/analyze с 01.06.2025 по 07.06.2025"
@@ -65,7 +68,7 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
     date_to = date_to_dt.strftime("%Y-%m-%d")
 
     params = {
-        "chat_id": update.message.chat_id,
+        "chat_id": message.chat_id,
         "from": date_from,
         "to": date_to
     }
@@ -74,7 +77,7 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
         response = requests.get(ANALYZE_API, params=params)
         if response.status_code == 400:
             detail = response.json().get("detail", "Некорректный запрос")
-            await update.message.reply_text(detail)
+            await message.reply_text(detail)
             return
         if response.status_code != 200:
             raise Exception(response.text)
@@ -85,11 +88,11 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         words_block = "\n".join([f"{i+1}. {w['word']} — {w['count']}" for i, w in enumerate(top_words)])
         reply = f"Анализ за период {match.group(1)} - {match.group(2)}:\n\nТоп-5 слов:\n{words_block}\n\nТемы обсуждений:\n{summary}"
-        await update.message.reply_text(reply)
+        await message.reply_text(reply)
 
     except Exception as e:
         logging.error(f"Analyze error: {e}")
-        await update.message.reply_text("Ошибка при получении анализа. Попробуйте позже.")
+        await message.reply_text("Ошибка при получении анализа. Попробуйте позже.")
 
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
