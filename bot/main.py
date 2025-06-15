@@ -72,6 +72,7 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "from": date_from,
         "to": date_to
     }
+
     try:
         response = requests.get(ANALYZE_API, params=params)
         if response.status_code == 400:
