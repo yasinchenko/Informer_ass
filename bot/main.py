@@ -112,14 +112,17 @@ async def _analyze_last(update: Update, context: ContextTypes.DEFAULT_TYPE, days
 
 
 async def analyze7(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logging.info("/analyze7 command received")
     await _analyze_last(update, context, 7)
 
 
 async def analyze14(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logging.info("/analyze14 command received")
     await _analyze_last(update, context, 14)
 
 
 async def analyze30(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logging.info("/analyze30 command received")
     await _analyze_last(update, context, 30)
 
 async def main() -> None:
